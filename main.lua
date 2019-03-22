@@ -1,46 +1,78 @@
  
---LÖVE calls 3 functions. First it calls love.load(). In here we create our variables.
+--LÖVE calls 3 functios. First it calls love.load(). In here we create our variables.
 --After that it calls love.update() and love.draw(), repeatedly in that order.
 --So: love.load -> love.update -> love.draw -> love.update -> love.draw -> love.update, etc.
 
-player = {
-  x = love.graphics.getWidth()/2,
-  y = love.graphics.getHeight()/2,
-  width = 50,
-  height = 50,
-  speed = 100,
-  xvel = 0,
-  yvel = 0,
-  angle_accelaration = 4,
-  accelaration = 100,
-  rotation = 0
-}
-  
+ 
+
 function love.load()
+  player = {
+    x = love.graphics.getWidth()/2,
+    y = love.graphics.getHeight()/2,
+    width = 50,
+    height = 50,
+    speed = 100,
+    xvel = 0,
+    yvel = 0,
+    angle_accelaration = 4,
+    accelaration = 100,
+    rotation = 0
+  }
+  bullet = {
+    --Not used for corrdinate tracking
+    --Only for special bullet properties
+    radius = 10,
+    speed = 200,
+    rotation = 0
+  }
+  
+  bullets = {
+  }
+  
 end
 
 function love.update(dt)
-  love.keypressed(key)
+  love.keypressed(key)  
+  love.keyreleased(key)
+  if getTableSize(bullets) > 0 then
+    --print(getTableSize(bullets))
+    for i=1,getTableSize(bullets) do
+      bullets[i].x = bullets[i].x + bullet.speed*dt * math.cos(bullets[i].rotation)
+      bullets[i].y = bullets[i].y + bullet.speed*dt * math.sin(bullets[i].rotation)
+    end
+  end
+  
+  --bulletFired = false
 end
 
 function love.draw()
+  --love.graphics.print(.x)
+  love.graphics.push()
   love.graphics.translate(player.x, player.y)
   love.graphics.rotate(player.rotation)
   
   -- Translate moves your origin from (0,0) to (x,y)
   -- So any coords specified afterwards for must be for the new origin
   CreatePlayer(-25, -25, player.width, player.height)
+  love.graphics.pop()  
+  for i=1,getTableSize(bullets) do
+    --love.graphics.print(bullets[i].x)
+    love.graphics.push()
+    love.graphics.circle("fill", bullets[i].x, bullets[i].y, bullets[i].radius)
+    love.graphics.pop()
+  end
 end
 
+
 function CreatePlayer(x, y, width, height, speed)  
-  body = {}
+  local body = {}
   body.x = x
   body.y = y
   body.width = width
   body.height = height
   body.speed = speed
   
-  head = {}
+  local head = {}
   head.x = x + width
   head.y = y + height * 0.25
   head.width = width - 25
@@ -51,22 +83,38 @@ function CreatePlayer(x, y, width, height, speed)
   love.graphics.rectangle("fill", head.x, head.y, head.width, head.height)
 end
 
+function CreateBullet(x,y,radius, rotation)
+  local bullet = {}
+  bullet.x = x
+  bullet.y = y
+  bullet.radius = radius
+  bullet.rotation = rotation
+  table.insert(bullets, bullet)
+end
+
+function love.keyreleased(key)
+   if key == "space" then
+      ShootBullet()
+   end
+end
+
 function love.keypressed(key)
   local dt = love.timer.getDelta()
   
-  if love.keyboard.isDown("right") then
+  if love.keyboard.isDown("right") or love.keyboard.isDown("d") then
     Turn("right", player.angle_accelaration)
     
-  elseif love.keyboard.isDown("left") then
+  elseif love.keyboard.isDown("left") or love.keyboard.isDown("a") then
     Turn("left", player.angle_accelaration)
-  elseif love.keyboard.isDown("up") then
+    
+  elseif love.keyboard.isDown("up") or love.keyboard.isDown("w") then
     player.xvel = player.xvel + player.accelaration*dt * math.cos(player.rotation)
     player.yvel = player.yvel + player.accelaration*dt * math.sin(player.rotation)
     
-  elseif love.keyboard.isDown("down") then
+  elseif love.keyboard.isDown("down") or love.keyboard.isDown("s") then
     player.xvel = player.xvel - player.accelaration*dt * math.cos(player.rotation)
     player.yvel = player.yvel - player.accelaration*dt * math.sin(player.rotation)
-    
+  
   elseif love.keyboard.isDown("escape") then
     love.window.close()
   end 
@@ -84,4 +132,16 @@ function Turn(direction, ANGACCEL)
   elseif direction == "left" then 
     player.rotation = player.rotation - ANGACCEL*dt
   end
+end
+
+function ShootBullet()  
+    CreateBullet(player.x, player.y, bullet.radius, player.rotation)
+end
+
+function getTableSize(t)
+    local count = 0
+    for _, __ in pairs(t) do
+        count = count + 1
+    end
+    return count
 end
