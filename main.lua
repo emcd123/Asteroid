@@ -7,8 +7,8 @@
 
 function love.load()
   --CONSTANTS
-  MAXASTEROIDS = 10
-  
+  MAXASTEROIDS = 8
+    
   --Data Models
   player = {
     x = love.graphics.getWidth()/2,
@@ -32,7 +32,7 @@ function love.load()
   asteroid = {
     health = 1,
     damage = 1,
-    radius = 10,
+    radius = 25,
     speed = 20
   }
   
@@ -51,27 +51,31 @@ function love.update(dt)
   end
   if getTableSize(bullets) > 0 then
     --print(getTableSize(bullets))
-    for i=1,getTableSize(bullets) do
-      bullets[i].x = bullets[i].x + bullet.speed*dt * math.cos(bullets[i].rotation)
-      bullets[i].y = bullets[i].y + bullet.speed*dt * math.sin(bullets[i].rotation)
+    for i_bulletMove=1,getTableSize(bullets) do
+      bullets[i_bulletMove].x = bullets[i_bulletMove].x + bullet.speed*dt * math.cos(bullets[i_bulletMove].rotation)
+      bullets[i_bulletMove].y = bullets[i_bulletMove].y + bullet.speed*dt * math.sin(bullets[i_bulletMove].rotation)
     end
   end
   if getTableSize(asteroids) > 0 then
     --print(getTableSize(bullets))
-    for i=1,getTableSize(asteroids) do
+    for i_asteroidMove=1,getTableSize(asteroids) do
       speed_x = love.math.random(20)
       speed_y = love.math.random(20)
-      --asteroids[i].x = asteroids[i].x + speed_x*dt
-      --asteroids[i].y = asteroids[i].y + speed_y*dt
+      asteroids[i_asteroidMove].x = asteroids[i_asteroidMove].x + speed_x*dt
+      asteroids[i_asteroidMove].y = asteroids[i_asteroidMove].y + speed_y*dt
     end
   end
   if getTableSize(bullets) > 0 and getTableSize(asteroids) > 0 then
     --print(getTableSize(bullets))
-    for i=1,getTableSize(bullets) do
-      for j=1,getTableSize(asteroids) do
-        if CheckBulletIntersectAsteroid(bullets[i], asteroids[j]) == true then
-          table.remove(asteroids[j])
-          table.remove(bullets[i])
+    for i_tableIndex = getTableSize(bullets), 1, -1 do
+      for j_tableIndex = getTableSize(asteroids), 1, -1 do
+        local bullet = bullets[i_tableIndex]
+        local asteroid = asteroids[j_tableIndex]
+        if CheckBulletIntersectAsteroid(bullet, asteroid) == true then
+          print(bullet)
+          table.remove(bullets, i_tableIndex)
+          table.remove(asteroids, j_tableIndex)
+          break
         end
       end
     end
@@ -97,7 +101,7 @@ function love.draw()
   for i=1,getTableSize(asteroids) do
     --love.graphics.print(asteroids[i].x)
     love.graphics.push()
-    love.graphics.circle("fill", asteroids[i].x, asteroids[i].y, asteroids[i].radius)
+    love.graphics.circle("fill", asteroids[i].x, asteroids[i].y, asteroid.radius)
     love.graphics.pop()
   end
 end
@@ -135,7 +139,6 @@ function CreateAsteroid()
   local asteroid = {}
   asteroid.x = love.math.random(love.graphics.getWidth())
   asteroid.y = love.math.random(love.graphics.getHeight())
-  asteroid.radius = 25
   table.insert(asteroids, asteroid)
 end
 
@@ -190,9 +193,17 @@ function SpawnAsteroid()
 end
 
 function CheckBulletIntersectAsteroid(bulletArg, asteroidArg)
-  if bulletArg.x > asteroidArg.x - 100 and bulletArg.x < asteroidArg.x + 100
-  and bulletArg.y > asteroidArg.y - 100 and bulletArg.y < asteroidArg.y + 100 then
-    print("hit")
+  if bulletArg.x > asteroidArg.x - asteroid.radius and bulletArg.x < asteroidArg.x + asteroid.radius
+  and bulletArg.y > asteroidArg.y - asteroid.radius and bulletArg.y < asteroidArg.y + asteroid.radius then
+    return true  
+  else
+    return false
+  end
+end
+
+function CheckPlayertIntersectAsteroid(playerArg, asteroidArg)
+  if playerArg.x > asteroidArg.x - asteroid.radius and playerArg.x < asteroidArg.x + asteroid.radius
+  and playerArg.y > asteroidArg.y - asteroid.radius and playerArg.y < asteroidArg.y + asteroid.radius then
     return true  
   else
     return false
