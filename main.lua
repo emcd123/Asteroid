@@ -3,12 +3,15 @@
 --After that it calls love.update() and love.draw(), repeatedly in that order.
 --So: love.load -> love.update -> love.draw -> love.update -> love.draw -> love.update, etc.
 
- 
-
 function love.load()
   --CONSTANTS
   MAXASTEROIDS = 8
+  WINDOW_WIDTH = love.graphics.getWidth()
+  WINDOW_HEIGHT = love.graphics.getHeight()
     
+  --Global Non-Constants
+  GAMERESET = false
+  
   --Data Models
   player = {
     x = love.graphics.getWidth()/2,
@@ -46,9 +49,20 @@ end
 function love.update(dt)
   love.keypressed(key)  
   love.keyreleased(key)
+  
   if getTableSize(asteroids) < MAXASTEROIDS then
     SpawnAsteroid()
   end
+  
+  if getTableSize(asteroids) > 0 then
+    for astroid_at_update_index = 1, getTableSize(asteroids) do
+      if CheckPlayerIntersectAsteroid(player, asteroids[astroid_at_update_index]) then        
+        GAMERESET = true
+        break
+      end
+    end  
+  end
+  
   if getTableSize(bullets) > 0 then
     --print(getTableSize(bullets))
     for i_bulletMove=1,getTableSize(bullets) do
@@ -84,6 +98,12 @@ end
 
 function love.draw()
   --love.graphics.print(.x)
+  if(GAMERESET == true)then
+    love.graphics.print("Game Over",love.graphics.getWidth()/2 - 50, love.graphics.getHeight()/2)    
+    love.graphics.print("Press 'Enter' to restart",love.graphics.getWidth()/2 -50, love.graphics.getHeight()/2 + 25)
+    return
+  end
+  
   love.graphics.push()
   love.graphics.translate(player.x, player.y)
   love.graphics.rotate(player.rotation)
@@ -151,7 +171,12 @@ end
 function love.keypressed(key)
   local dt = love.timer.getDelta()
   
-  if love.keyboard.isDown("right") or love.keyboard.isDown("d") then
+  if GAMERESET == true then
+    if love.keyboard.isDown("return") then
+      love.load()
+    end    
+      
+  elseif love.keyboard.isDown("right") or love.keyboard.isDown("d") then
     Turn("right", player.angle_accelaration)
     
   elseif love.keyboard.isDown("left") or love.keyboard.isDown("a") then
@@ -166,7 +191,7 @@ function love.keypressed(key)
     player.yvel = player.yvel - player.accelaration*dt * math.sin(player.rotation)
   
   elseif love.keyboard.isDown("escape") then
-    love.window.close()
+    love.window.close()  
   end 
   
   player.x = player.x + player.xvel*dt
@@ -201,7 +226,7 @@ function CheckBulletIntersectAsteroid(bulletArg, asteroidArg)
   end
 end
 
-function CheckPlayertIntersectAsteroid(playerArg, asteroidArg)
+function CheckPlayerIntersectAsteroid(playerArg, asteroidArg)
   if playerArg.x > asteroidArg.x - asteroid.radius and playerArg.x < asteroidArg.x + asteroid.radius
   and playerArg.y > asteroidArg.y - asteroid.radius and playerArg.y < asteroidArg.y + asteroid.radius then
     return true  
