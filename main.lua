@@ -46,6 +46,9 @@ function love.load()
   }
   asteroids = {
   }
+  ScoreData = {
+    --To be used for storing information to write to high score file
+  }
 end
 
 function love.update(dt)
@@ -236,6 +239,7 @@ function CheckForGameOver()
     for astroid_at_update_index = 1, getTableSize(asteroids) do
       if CheckPlayerIntersectAsteroid(player, asteroids[astroid_at_update_index]) then        
         GAMERESET = true
+        table.insert(ScoreData, {"player", player.score})
         break
       end
     end  
