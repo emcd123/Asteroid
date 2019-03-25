@@ -23,7 +23,9 @@ function love.load()
     yvel = 0,
     angle_accelaration = 4,
     accelaration = 100,
-    rotation = 0
+    rotation = 0,
+    
+    score = 0
   }
   bullet = {
     --Not used for corrdinate tracking
@@ -54,15 +56,8 @@ function love.update(dt)
     SpawnAsteroid()
   end
   
-  if getTableSize(asteroids) > 0 then
-    for astroid_at_update_index = 1, getTableSize(asteroids) do
-      if CheckPlayerIntersectAsteroid(player, asteroids[astroid_at_update_index]) then        
-        GAMERESET = true
-        break
-      end
-    end  
-  end
-  
+  CheckForGameOver()
+
   if getTableSize(bullets) > 0 then
     --print(getTableSize(bullets))
     for i_bulletMove=1,getTableSize(bullets) do
@@ -86,7 +81,7 @@ function love.update(dt)
         local bullet = bullets[i_tableIndex]
         local asteroid = asteroids[j_tableIndex]
         if CheckBulletIntersectAsteroid(bullet, asteroid) == true then
-          print(bullet)
+          player.score = player.score + 1
           table.remove(bullets, i_tableIndex)
           table.remove(asteroids, j_tableIndex)
           break
@@ -98,13 +93,14 @@ end
 
 function love.draw()
   --love.graphics.print(.x)
-  if(GAMERESET == true)then
-    love.graphics.print("Game Over",love.graphics.getWidth()/2 - 50, love.graphics.getHeight()/2)    
-    love.graphics.print("Press 'Enter' to restart",love.graphics.getWidth()/2 -50, love.graphics.getHeight()/2 + 25)
-    return
-  end
+  if GAMERESET then DrawGameOver() return end
   
   love.graphics.push()
+  love.graphics.print("Score: ", 10, 10)
+  love.graphics.print(player.score, 100, 10)
+  love.graphics.pop()
+  
+  love.graphics.push()  
   love.graphics.translate(player.x, player.y)
   love.graphics.rotate(player.rotation)
   
@@ -233,6 +229,24 @@ function CheckPlayerIntersectAsteroid(playerArg, asteroidArg)
   else
     return false
   end
+end
+
+function CheckForGameOver()
+  if getTableSize(asteroids) > 0 then
+    for astroid_at_update_index = 1, getTableSize(asteroids) do
+      if CheckPlayerIntersectAsteroid(player, asteroids[astroid_at_update_index]) then        
+        GAMERESET = true
+        break
+      end
+    end  
+  end
+end
+
+function DrawGameOver()  
+  love.graphics.print("Game Over",love.graphics.getWidth()/2 - 50, love.graphics.getHeight()/2)    
+  love.graphics.print("Press 'Enter' to restart",love.graphics.getWidth()/2 -50, love.graphics.getHeight()/2 + 25)
+  love.graphics.print("Your Score Was: ",love.graphics.getWidth()/2 -50, love.graphics.getHeight()/2 + 50)
+  love.graphics.print(player.score,love.graphics.getWidth()/2 + 100, love.graphics.getHeight()/2 + 50)
 end
 
 function getTableSize(t)
